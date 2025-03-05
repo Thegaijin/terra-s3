@@ -1,26 +1,35 @@
-provider "aws" {
-  region = "eu-west-2"
-}
+# provider "aws" {
+#   region = "eu-west-2"
+# }
 
-locals {
-  bucket_name = "tf-k8-state-${random_string.suffix.result}"
-}
+# locals {
+#   bucket_name = "tf-k8-state-${random_string.suffix.result}"
+# }
 
 resource "random_string" "suffix" {
   length  = 8
   special = false
+  upper   = false
 }
 
 resource "aws_s3_bucket" "tf_state" {
-  bucket = local.bucket_name
+  bucket = var.bucket_name + "${random_string.suffix.result}"
 
   # Prevent accidental deletion of this S3 bucket
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "tf_state_ownership" {
+  bucket = aws_s3_bucket.tf_state.id
+  rule {
+    object_ownership = "ObjectWriter"
   }
 }
 
 resource "aws_s3_bucket_acl" "tf_state_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.tf_state_ownership]
   bucket = aws_s3_bucket.tf_state.id
   acl    = "private"
 }
