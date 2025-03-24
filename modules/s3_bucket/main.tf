@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.8"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 2.0"
+    }
+  }
+}
+
 # provider "aws" {
 #   region = "eu-west-2"
 # }
@@ -13,7 +26,7 @@ resource "random_string" "suffix" {
 }
 
 resource "aws_s3_bucket" "tf_state" {
-  bucket = var.bucket_name + "${random_string.suffix.result}"
+  bucket = format("%s-%s", var.bucket_name, "${random_string.suffix.result}")
 
   # Prevent accidental deletion of this S3 bucket
   lifecycle {
